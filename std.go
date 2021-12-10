@@ -13,15 +13,15 @@ func Sort(data Interface) {
 	recurse(data, 0, n, 0, false, limit)
 }
 
-// recurse sorts `v` recursively.
-// The algorithm base on pattern-defeating quicksort(pdqsort), but without the optimizations from block quciksort.
+// recurse sorts `data` recursively.
+// The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuciksort.
 // pdqsort paper: https://arxiv.org/pdf/2106.05123.pdf
 func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
 	const maxInsertion = 12
 
 	var (
-		wasBalanced    = true // whether the last partitioning was reasonably balanced.
-		wasPartitioned = true // whether the slice looks like already partitioned.
+		wasBalanced    = true // whether the last partitioning was reasonably balanced
+		wasPartitioned = true // whether the slice was already partitioned
 	)
 
 	for {
@@ -38,7 +38,7 @@ func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
 			return
 		}
 
-		// If the last partitioning was imbalanced, try breaking patterns.
+		// If the last partitioning was imbalanced, we need to breaking patterns.
 		if !wasBalanced {
 			breakPatterns(data, a, b)
 			limit--
@@ -62,80 +62,93 @@ func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
 		}
 
 		mid, wasP := partition(data, a, b, pivotidx)
-		if b-a-mid < mid {
-			wasBalanced = (b - a - mid) >= b-a/8
-		} else {
-			wasBalanced = mid >= b-a/8
-		}
 		wasPartitioned = wasP
 
-		if mid-a > b-mid {
+		leftLen, rightLen := mid-a, b-mid
+		balanceThreshold := length / 8
+		if leftLen > rightLen {
+			wasBalanced = rightLen >= balanceThreshold
 			recurse(data, a, mid, pred, predExist, limit)
 			a = mid + 1
 			pred = mid
 			predExist = true
 		} else {
+			wasBalanced = leftLen >= balanceThreshold
 			recurse(data, mid+1, b, mid, true, limit)
 			b = mid
 		}
 	}
 }
 
-func partition(v Interface, a, b, pivotidx int) (newpivotidx int, wasPartitioned bool) {
-	v.Swap(a, pivotidx)
+func partition(data Interface, a, b, pivotidx int) (newpivotidx int, wasPartitioned bool) {
+	data.Swap(a, pivotidx)
 	i, j := a+1, b-1
 
+	for i <= j && data.Less(i, a) {
+		i++
+	}
+	for i <= j && !data.Less(j, a) {
+		j--
+	}
+	if i > j {
+		data.Swap(j, a)
+		return j, true
+	}
+	data.Swap(i, j)
+	i++
+	j--
+
 	for {
-		for i <= j && v.Less(i, a) {
+		for i <= j && data.Less(i, a) {
 			i++
 		}
-		for i <= j && !v.Less(j, a) {
+		for i <= j && !data.Less(j, a) {
 			j--
 		}
 		if i > j {
 			break
 		}
-		v.Swap(i, j)
+		data.Swap(i, j)
 		i++
 		j--
 	}
-	v.Swap(j, a)
-	return j, j == pivotidx
+	data.Swap(j, a)
+	return j, false
 }
 
-// partitionEqual partitions `v` into elements equal to `v[pivotidx]` followed by elements greater than `v[pivotidx]`.
-// It assumed that `v` does not contain elements smaller than the `v[pivotidx]`.
-func partitionEqual(v Interface, a, b, pivotidx int) int {
-	v.Swap(a, pivotidx)
+// partitionEqual partitions `data` into elements equal to `data[pivotidx]` followed by elements greater than `data[pivotidx]`.
+// It assumed that `data` does not contain elements smaller than the `data[pivotidx]`.
+func partitionEqual(data Interface, a, b, pivotidx int) int {
+	data.Swap(a, pivotidx)
 
 	L := a + 1
 	R := b
 	for {
-		for L < R && !v.Less(a, L) {
+		for L < R && !data.Less(a, L) {
 			L++
 		}
-		for L < R && v.Less(a, R-1) {
+		for L < R && data.Less(a, R-1) {
 			R--
 		}
 		if L >= R {
 			break
 		}
 		R--
-		v.Swap(L, R)
+		data.Swap(L, R)
 		L++
 	}
 	return L
 }
 
 // partialInsertionSort partially sorts a slice, returns `true` if the slice is sorted at the end.
-func partialInsertionSort(v Interface, a, b int) bool {
+func partialInsertionSort(data Interface, a, b int) bool {
 	const (
 		maxSteps         = 5  // maximum number of adjacent out-of-order pairs that will get shifted
-		shortestShifting = 50 // don't shift any elements on short arrays, that has a performance cost.
+		shortestShifting = 50 // don't shift any elements on short arrays
 	)
 	i := a + 1
 	for j := 0; j < maxSteps; j++ {
-		for i < b && !v.Less(i, i-1) {
+		for i < b && !data.Less(i, i-1) {
 			i++
 		}
 
@@ -147,49 +160,33 @@ func partialInsertionSort(v Interface, a, b int) bool {
 			return false
 		}
 
-		v.Swap(i-1, i)
+		data.Swap(i-1, i)
 
 		// Shift the smaller one to the left.
-		shiftTail(v, a, i)
+		if i-a >= 2 {
+			for j := i - 1; j >= 1; j-- {
+				if !data.Less(j, j-1) {
+					break
+				}
+				data.Swap(j, j-1)
+			}
+		}
 		// Shift the greater one to the right.
-		shiftHead(v, i, b)
+		if b-i >= 2 {
+			for j := 1; j < b; j++ {
+				if !data.Less(j, j-1) {
+					break
+				}
+				data.Swap(j, j-1)
+			}
+		}
 	}
-
 	return false
-}
-
-func shiftTail(v Interface, a, b int) {
-	l := b - a
-	if l >= 2 {
-		for i := l - 1; i >= 1; i-- {
-			if !v.Less(a+i, a+i-1) {
-				break
-			}
-			v.Swap(a+i, a+i-1)
-		}
-	}
-}
-
-func shiftHead(v Interface, a, b int) {
-	l := b - a
-	if l >= 2 {
-		for i := 1; i < l; i++ {
-			if !v.Less(a+i, a+i-1) {
-				break
-			}
-			v.Swap(a+i, a+i-1)
-		}
-	}
-}
-
-func nextPowerOfTwo(length int) uint {
-	shift := uint(strconv.IntSize - bits.LeadingZeros(uint(length)))
-	return uint(1 << shift)
 }
 
 // breakPatterns scatters some elements around in an attempt to break some patterns
 // that might cause imbalanced partitions in quicksort.
-func breakPatterns(v Interface, a, b int) {
+func breakPatterns(data Interface, a, b int) {
 	length := b - a
 	if length >= 8 {
 		// Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
@@ -206,19 +203,19 @@ func breakPatterns(v Interface, a, b int) {
 			if other >= length {
 				other -= length
 			}
-			v.Swap(pos-1+i, a+other)
+			data.Swap(pos-1+i, a+other)
 		}
 	}
 }
 
-// choosePivot chooses a pivot in `v`.
+// choosePivot chooses a pivot in `data`.
 //
-// `v` might be reordered in this function.
+// `data` might be reordered in this function.
 //
 // [0,8): choose a static pivot.
 // [8,ShortestNinther): use the simple median-of-three method.
 // [ShortestNinther,∞): use the Tukey’s ninther method.
-func choosePivot(v Interface, x, y int) (pivotidx int, likelySorted bool) {
+func choosePivot(data Interface, x, y int) (pivotidx int, likelySorted bool) {
 	const (
 		shortestNinther = 50
 		maxSwaps        = 4 * 3
@@ -236,13 +233,12 @@ func choosePivot(v Interface, x, y int) (pivotidx int, likelySorted bool) {
 	if l >= 8 {
 		if l >= shortestNinther {
 			// Tukey’s ninther method.
-			// Find medians in the neighborhoods of `a`, `b`, `c`.
-			sortAdjacent(v, &a, &swaps)
-			sortAdjacent(v, &b, &swaps)
-			sortAdjacent(v, &c, &swaps)
+			sortAdjacent(data, &a, &swaps)
+			sortAdjacent(data, &b, &swaps)
+			sortAdjacent(data, &c, &swaps)
 		}
-		// Find the median among `a`, `b`, `c`.
-		sort3(v, &a, &b, &c, &swaps)
+		// Find the median among `a`, `b`, `c` and stores it into `b`.
+		sort3(data, &a, &b, &c, &swaps)
 	}
 
 	if swaps < maxSwaps {
@@ -250,31 +246,31 @@ func choosePivot(v Interface, x, y int) (pivotidx int, likelySorted bool) {
 	} else {
 		// The maximum number of swaps was performed.
 		// Reversing will probably help.
-		reverseRange(v, x, y)
+		reverseRange(data, x, y)
 		return 2*x + (l - 1 - b), true
 	}
 }
 
-// sort2 swaps `a, b` so that `v[a] <= v[b]`.
-func sort2(v Interface, a, b, swaps *int) {
-	if v.Less(*b, *a) {
+// sort2 swaps `a, b` so that `data[a] <= data[b]`.
+func sort2(data Interface, a, b, swaps *int) {
+	if data.Less(*b, *a) {
 		*a, *b = *b, *a
 		*swaps++
 	}
 }
 
-// sort3 swaps `a, b, c` so that `v[a] <= v[b] <= v[c]`.
-func sort3(v Interface, a, b, c, swaps *int) {
-	sort2(v, a, b, swaps)
-	sort2(v, b, c, swaps)
-	sort2(v, a, b, swaps)
+// sort3 swaps `a, b, c` so that `data[a] <= data[b] <= data[c]`.
+func sort3(data Interface, a, b, c, swaps *int) {
+	sort2(data, a, b, swaps)
+	sort2(data, b, c, swaps)
+	sort2(data, a, b, swaps)
 }
 
-// sortAdjacent finds the median of `v[a - 1], v[a], v[a + 1]` and stores the index into `a`.
-func sortAdjacent(v Interface, a, swaps *int) {
+// sortAdjacent finds the median of `data[a - 1], data[a], data[a + 1]` and stores the index into `a`.
+func sortAdjacent(data Interface, a, swaps *int) {
 	t1 := *a - 1
 	t2 := *a + 1
-	sort3(v, &t1, a, &t2, swaps)
+	sort3(data, &t1, a, &t2, swaps)
 }
 
 func reverseRange(data Interface, a, b int) {
@@ -285,4 +281,9 @@ func reverseRange(data Interface, a, b int) {
 		i++
 		j--
 	}
+}
+
+func nextPowerOfTwo(length int) uint {
+	shift := uint(strconv.IntSize - bits.LeadingZeros(uint(length)))
+	return uint(1 << shift)
 }
