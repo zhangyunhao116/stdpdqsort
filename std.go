@@ -14,7 +14,7 @@ func Sort(data Interface) {
 }
 
 // recurse sorts `data` recursively.
-// The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuciksort.
+// The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuicksort.
 // pdqsort paper: https://arxiv.org/pdf/2106.05123.pdf
 func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
 	const maxInsertion = 12
