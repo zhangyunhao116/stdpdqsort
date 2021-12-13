@@ -2,10 +2,9 @@ package stdpdqsort
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
 	"testing"
-
-	"github.com/zhangyunhao116/fastrand"
 )
 
 func TestAll(t *testing.T) {
@@ -25,16 +24,16 @@ func TestAll(t *testing.T) {
 }
 
 func TestPartialInsertionSort(t *testing.T) {
-	randomTestTimes := fastrand.Intn(1000)
+	randomTestTimes := rand.Intn(1000)
 	for i := 0; i < randomTestTimes; i++ {
-		randomLenth := fastrand.Intn(100)
+		randomLenth := rand.Intn(100)
 		if randomLenth == 0 {
 			continue
 		}
 		v1 := make([]int, randomLenth)
 		v2 := make([]int, randomLenth)
 		for j := 0; j < randomLenth; j++ {
-			randomValue := fastrand.Intn(randomLenth)
+			randomValue := rand.Intn(randomLenth)
 			v1[j] = randomValue
 			v2[j] = randomValue
 		}
@@ -51,9 +50,9 @@ func TestPartialInsertionSort(t *testing.T) {
 
 func fuzzTestSort(t *testing.T, f func(data []int)) {
 	const times = 2048
-	randomTestTimes := fastrand.Intn(times)
+	randomTestTimes := rand.Intn(times)
 	for i := 0; i < randomTestTimes; i++ {
-		randomLenth := fastrand.Intn(times)
+		randomLenth := rand.Intn(times)
 		if randomLenth == 0 {
 			continue
 		}
@@ -61,7 +60,7 @@ func fuzzTestSort(t *testing.T, f func(data []int)) {
 		v2 := make([]int, randomLenth)
 		v3 := make([]int, randomLenth)
 		for j := 0; j < randomLenth; j++ {
-			randomValue := fastrand.Intn(randomLenth)
+			randomValue := rand.Intn(randomLenth)
 			v1[j] = randomValue
 			v2[j] = randomValue
 			v3[j] = randomValue
@@ -78,18 +77,18 @@ func fuzzTestSort(t *testing.T, f func(data []int)) {
 
 func fuzzTestPartition(t *testing.T, f func(data []int, pivotidx int) int) {
 	const times = 2048
-	randomTestTimes := fastrand.Intn(times)
+	randomTestTimes := rand.Intn(times)
 	for i := 0; i < randomTestTimes; i++ {
-		randomLenth := fastrand.Intn(times)
+		randomLenth := rand.Intn(times)
 		if randomLenth == 0 {
 			continue
 		}
 		v1 := make([]int, randomLenth)
 		for j := 0; j < randomLenth; j++ {
-			randomValue := fastrand.Intn(randomLenth)
+			randomValue := rand.Intn(randomLenth)
 			v1[j] = randomValue
 		}
-		pivotidx := fastrand.Intn(len(v1))
+		pivotidx := rand.Intn(len(v1))
 		newpivotidx := f(v1, pivotidx)
 		pivot := v1[newpivotidx]
 		for i, v := range v1 {

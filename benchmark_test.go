@@ -2,10 +2,9 @@ package stdpdqsort
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
 	"testing"
-
-	"github.com/zhangyunhao116/fastrand"
 )
 
 var sizes = []int{1 << 6, 1 << 8, 1 << 10, 1 << 12, 1 << 16}
@@ -46,7 +45,7 @@ func benchmarkBase(b *testing.B, dataset func(x []int)) {
 func BenchmarkRandom(b *testing.B) {
 	benchmarkBase(b, func(x []int) {
 		for i := range x {
-			x[i] = fastrand.Int()
+			x[i] = rand.Int()
 		}
 	})
 }
@@ -65,7 +64,7 @@ func BenchmarkSorted90(b *testing.B) {
 			if i < len(x)-(len(x)/10) {
 				x[i] = i
 			} else {
-				x[i] = fastrand.Int()
+				x[i] = rand.Int()
 			}
 		}
 	})
@@ -85,7 +84,7 @@ func BenchmarkReversed90(b *testing.B) {
 			if i < len(x)-(len(x)/10) {
 				x[i] = len(x) - i
 			} else {
-				x[i] = fastrand.Int()
+				x[i] = rand.Int()
 			}
 		}
 	})
