@@ -9,6 +9,9 @@ import (
 // The sort is not guaranteed to be stable.
 func Sort(data Interface) {
 	n := data.Len()
+	if n <= 1 {
+		return
+	}
 	limit := strconv.IntSize - bits.LeadingZeros(uint(n))
 	recurse(data, 0, n, 0, false, limit)
 }
