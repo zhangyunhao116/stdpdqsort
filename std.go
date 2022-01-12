@@ -1,9 +1,8 @@
-package stdpdqsort
+// Copyright 2022 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
-import (
-	"math/bits"
-	"strconv"
-)
+package stdpdqsort
 
 // Sort sorts data.
 // The sort is not guaranteed to be stable.
@@ -12,7 +11,7 @@ func Sort(data Interface) {
 	if n <= 1 {
 		return
 	}
-	limit := strconv.IntSize - bits.LeadingZeros(uint(n))
+	limit := usize - bitsLeadingZeros(uint(n))
 	recurse(data, 0, n, 0, false, limit)
 }
 
@@ -287,6 +286,6 @@ func reverseRange(data Interface, a, b int) {
 }
 
 func nextPowerOfTwo(length int) uint {
-	shift := uint(strconv.IntSize - bits.LeadingZeros(uint(length)))
+	shift := uint(usize - bitsLeadingZeros(uint(length)))
 	return uint(1 << shift)
 }
