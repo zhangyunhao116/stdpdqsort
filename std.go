@@ -19,7 +19,7 @@ func Sort(data Interface) {
 // The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuicksort.
 // pdqsort paper: https://arxiv.org/pdf/2106.05123.pdf
 func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
-	const maxInsertion = 12
+	const MaxInsertion = 12
 
 	var (
 		wasBalanced    = true // whether the last partitioning was reasonably balanced
@@ -29,7 +29,7 @@ func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
 	for {
 		length := b - a
 
-		if length <= maxInsertion {
+		if length <= MaxInsertion {
 			insertionSort(data, a, b)
 			return
 		}
@@ -145,11 +145,11 @@ func partitionEqual(data Interface, a, b, pivotidx int) int {
 // partialInsertionSort partially sorts a slice, returns `true` if the slice is sorted at the end.
 func partialInsertionSort(data Interface, a, b int) bool {
 	const (
-		maxSteps         = 5  // maximum number of adjacent out-of-order pairs that will get shifted
-		shortestShifting = 50 // don't shift any elements on short arrays
+		MaxSteps         = 5  // maximum number of adjacent out-of-order pairs that will get shifted
+		ShortestShifting = 50 // don't shift any elements on short arrays
 	)
 	i := a + 1
-	for j := 0; j < maxSteps; j++ {
+	for j := 0; j < MaxSteps; j++ {
 		for i < b && !data.Less(i, i-1) {
 			i++
 		}
@@ -158,7 +158,7 @@ func partialInsertionSort(data Interface, a, b int) bool {
 			return true
 		}
 
-		if b-a < shortestShifting {
+		if b-a < ShortestShifting {
 			return false
 		}
 
@@ -217,23 +217,23 @@ func breakPatterns(data Interface, a, b int) {
 // [0,8): choose a static pivot.
 // [8,ShortestNinther): use the simple median-of-three method.
 // [ShortestNinther,∞): use the Tukey’s ninther method.
-func choosePivot(data Interface, x, y int) (pivotidx int, likelySorted bool) {
+func choosePivot(data Interface, lo, hi int) (pivotidx int, likelySorted bool) {
 	const (
-		shortestNinther = 50
-		maxSwaps        = 4 * 3
+		ShortestNinther = 50
+		MaxSwaps        = 4 * 3
 	)
 
-	l := y - x
+	l := hi - lo
 
 	var (
 		swaps int
-		a     = x + l/4*1
-		b     = x + l/4*2
-		c     = x + l/4*3
+		a     = lo + l/4*1
+		b     = lo + l/4*2
+		c     = lo + l/4*3
 	)
 
 	if l >= 8 {
-		if l >= shortestNinther {
+		if l >= ShortestNinther {
 			// Tukey’s ninther method.
 			sortAdjacent(data, &a, &swaps)
 			sortAdjacent(data, &b, &swaps)
@@ -243,13 +243,13 @@ func choosePivot(data Interface, x, y int) (pivotidx int, likelySorted bool) {
 		sort3(data, &a, &b, &c, &swaps)
 	}
 
-	if swaps < maxSwaps {
+	if swaps < MaxSwaps {
 		return b, (swaps == 0)
 	} else {
 		// The maximum number of swaps was performed.
 		// Reversing will probably help.
-		reverseRange(data, x, y)
-		return 2*x + (l - 1 - b), true
+		reverseRange(data, lo, hi)
+		return 2*lo + (l - 1 - b), true
 	}
 }
 
