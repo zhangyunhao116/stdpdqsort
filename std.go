@@ -186,26 +186,35 @@ func partialInsertionSort(data Interface, a, b int) bool {
 	return false
 }
 
+// Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
+type xorshift uint64
+
+func (r *xorshift) Next() uint64 {
+	*r ^= *r << 13
+	*r ^= *r >> 17
+	*r ^= *r << 5
+	return uint64(*r)
+}
+
 // breakPatterns scatters some elements around in an attempt to break some patterns
 // that might cause imbalanced partitions in quicksort.
 func breakPatterns(data Interface, a, b int) {
 	length := b - a
 	if length >= 8 {
-		// Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
-		random := uint(length)
-		random ^= random << 13
-		random ^= random >> 17
-		random ^= random << 5
+		random := xorshift(length)
 
 		modulus := nextPowerOfTwo(length)
-		pos := a + length/8
+		var idxs [3]int
+		idxs[0] = a + (length/4)*2 - 1
+		idxs[1] = a + (length/4)*2
+		idxs[2] = a + (length/4)*2 + 1
 
-		for i := 0; i < 3; i++ {
-			other := int(random & (modulus - 1))
+		for _, idx := range idxs {
+			other := int(uint(random.Next()) & (modulus - 1))
 			if other >= length {
 				other -= length
 			}
-			data.Swap(pos-1+i, a+other)
+			data.Swap(idx, a+other)
 		}
 	}
 }
