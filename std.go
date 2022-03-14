@@ -186,14 +186,14 @@ func partialInsertionSort(data Interface, a, b int) bool {
 	return false
 }
 
-// Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
-type xorshift uint64
+// xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
+type xorshift uint
 
-func (r *xorshift) Next() uint64 {
+func (r *xorshift) Next() uint {
 	*r ^= *r << 13
 	*r ^= *r >> 17
 	*r ^= *r << 5
-	return uint64(*r)
+	return uint(*r)
 }
 
 // breakPatterns scatters some elements around in an attempt to break some patterns
