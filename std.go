@@ -12,13 +12,13 @@ func Sort(data Interface) {
 		return
 	}
 	limit := usize - bitsLeadingZeros(uint(n))
-	recurse(data, 0, n, 0, false, limit)
+	pdqsort(data, 0, n, 0, false, limit)
 }
 
-// recurse sorts `data` recursively.
+// pdqsort sorts `data` recursively.
 // The algorithm based on pattern-defeating quicksort(pdqsort), but without the optimizations from BlockQuicksort.
 // pdqsort paper: https://arxiv.org/pdf/2106.05123.pdf
-func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
+func pdqsort(data Interface, a, b, pred int, predExist bool, limit int) {
 	const MaxInsertion = 12
 
 	var (
@@ -70,13 +70,13 @@ func recurse(data Interface, a, b, pred int, predExist bool, limit int) {
 		balanceThreshold := length / 8
 		if leftLen > rightLen {
 			wasBalanced = rightLen >= balanceThreshold
-			recurse(data, a, mid, pred, predExist, limit)
+			pdqsort(data, a, mid, pred, predExist, limit)
 			a = mid + 1
 			pred = mid
 			predExist = true
 		} else {
 			wasBalanced = leftLen >= balanceThreshold
-			recurse(data, mid+1, b, mid, true, limit)
+			pdqsort(data, mid+1, b, mid, true, limit)
 			b = mid
 		}
 	}
